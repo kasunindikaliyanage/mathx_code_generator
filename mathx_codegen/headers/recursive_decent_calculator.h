@@ -26,6 +26,12 @@ struct stmts
 	std::string begin;
 };
 
+struct condition
+{
+	std::string true_lbl;
+	std::string false_lbl;
+	std::string code;
+};
 
 struct expr{
 	std::string addr;
@@ -43,6 +49,8 @@ class SimpleParser {
 	expr* exprssion();
 	expr* exprssion_( expr* );
 	//expr power( expr );
+
+	void relation(condition*);
 
 	void program();
 	void decls();

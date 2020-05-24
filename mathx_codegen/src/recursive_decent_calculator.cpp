@@ -90,8 +90,8 @@ void SimpleParser::program()
 		decls();
 
 		stmts* temp = new stmts();
-		new_label(temp);
-		std::cout << temp->next << ":" <<std::endl;
+		//new_label(temp);
+		//std::cout << temp->next << ":" <<std::endl;
 		
 		new_label(temp);
 		statements(temp);
@@ -185,8 +185,10 @@ void SimpleParser::statements( stmts* inherited )
 	//here the condition check should be END && EOF
 	if (next_token->token_type != END && !lexer->isEOF && next_token->token_type != E_BRACES)
 	{
+		std::cout << inherited->next << ":\n";
+		new_label( inherited );
 		statement( inherited );
-		statements(inherited);
+		statements( inherited );
 	}
 	else
 	{
@@ -252,58 +254,32 @@ void SimpleParser::statement( stmts* inherited )
 	}
 	else if (next_token->token_type == IF)
 	{
+		stmts* temp = new stmts();
+		new_label(temp);
+
 		getNextToken();
-		if (next_token->token_type == O_PARAM)
+		if (next_token->token_type != O_PARAM)
 		{
-			expr* result1 = exprssion();
-			std::cout << result1->code;
-
-			getNextToken();
-			if (is_relation_operator(next_token))
-			{
-				std::string temp_ops = next_token->value;
-				// store the token type, as below call to expr will change the tocken
-				int relation_op = next_token->token_type;
-
-				// right side of the relation expression.
-				expr* result2 = exprssion();
-				std::cout << result2->code;
-
-				getNextToken();
-
-				// end paranthasis of IF condition when both E1 and E2 are present
-				if (next_token->token_type == E_PARAM)
-				{
-					stmts* temp = new stmts();
-					new_label(temp);
-
-					std::cout << "if " << result1->addr << " " << temp_ops << " " << result2->addr << " goto " << temp->next << "\n";
-					std::cout << "goto " << inherited->next << "\n";
-					block(temp);
-
-					std::cout << inherited->next << ":\n";
-				}
-			}
-			else if (next_token->token_type == E_PARAM) // end paranthasis of IF condition if only one E is present
-			{
-				stmts* temp = new stmts();
-				new_label(temp);
-
-				std::cout << "if " << result1->addr << " > " << "0  goto " << temp->next << "\n";
-				std::cout << "goto " << inherited->next << "\n";
-				block(temp);
-
-				std::cout << inherited->next << ":\n";
-			}
-			else
-			{
-				std::cout << "Error : expected relation operator in the IF statement \n";
-			}
+			std::cout << "Expected ( for IF statement \n";
 		}
-		else
+
+		condition* cond_temp = new condition();
+		cond_temp->true_lbl = temp->next;
+		cond_temp->false_lbl = inherited->next;
+
+		relation(cond_temp);
+
+		getNextToken();
+		if (next_token->token_type != E_PARAM)
 		{
-			std::cout << "Error : expected ( after keyword IF \n";
+			std::cout << "Expected ) for IF statement \n";
 		}
+
+		std::cout << cond_temp->code;
+		std::cout << cond_temp->true_lbl << ":\n";
+
+		block(inherited);
+
 	} // end IF statement
 	else if (next_token->token_type == WHILE)
 	{
@@ -383,6 +359,36 @@ void SimpleParser::statement( stmts* inherited )
 }
 
 
+void SimpleParser::relation(condition* inherited)
+{
+	expr* lhs_expr = exprssion();
+
+	getNextToken();
+	std::string temp_ops = next_token->value;
+
+	if ( is_relation_operator( next_token ))		// handle E < E, E > E, E >= E, E <= E
+	{
+		expr* rhs_expr = exprssion();
+		
+		inherited->code = lhs_expr->code + rhs_expr->code
+						+ "if " + lhs_expr->addr + " " + temp_ops + " " + rhs_expr->addr + " goto " + inherited->true_lbl + "\n"
+						+ "goto " + inherited->false_lbl + "\n";
+	}
+	else if (next_token->token_type == E_PARAM)		// handle only E
+	{
+		// end paranthasis will be handled from statement level.
+		// so push the current token to the backtrack stack.
+		backtrack_stack.push(next_token);
+		inherited->code = lhs_expr->code
+			+ "if " + lhs_expr->addr + " " + temp_ops + " 0 " + " goto " + inherited->true_lbl + "\n"
+			+ "goto " + inherited->false_lbl + "\n";
+	}
+	else
+	{
+		std::cout << "Error : expected relation operator in the relational expression \n";
+	}
+}
+
 // evaluation of condition in the if statement is give as inherited attribute for this.
 void SimpleParser::block( stmts* inherited )
 {
@@ -394,7 +400,7 @@ void SimpleParser::block( stmts* inherited )
 		std::cout << "Error : expect { at the begining of the IF block \n";
 	}
 
-	std::cout << inherited->next << ":\n";
+	//std::cout << inherited->next << ":\n";
 
 	statements(inherited);
 
