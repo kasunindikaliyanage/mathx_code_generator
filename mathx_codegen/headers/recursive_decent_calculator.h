@@ -19,6 +19,13 @@
 #include <map>
 #include "../headers/simple_lexer.h"
 
+struct stmts
+{
+	std::string next;
+	std::string code;
+};
+
+
 struct expr{
 	std::string addr;
 	std::string code;
@@ -35,6 +42,16 @@ class SimpleParser {
 	expr* exprssion();
 	expr* exprssion_( expr* );
 	//expr power( expr );
+
+	void program();
+	void decls();
+	void decl();
+	void ids();
+
+	void block( stmts* );
+
+	void statements( stmts* );
+	void statement( stmts* );
 
 
 	void getNextToken();
