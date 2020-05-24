@@ -23,6 +23,7 @@ struct stmts
 {
 	std::string next;
 	std::string code;
+	std::string begin;
 };
 
 

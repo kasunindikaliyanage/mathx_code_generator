@@ -38,10 +38,14 @@ static void new_temp( expr* expression )
 }
 
 
-static void new_label( stmts* statements )
+static void new_label( stmts* statements, bool isBegin= false )
 {
 	y++;
-	statements->next = "L" + std::to_string(y);
+
+	if(!isBegin)
+		statements->next = "L" + std::to_string(y);
+	else
+		statements->begin = "L" + std::to_string(y);
 }
 
 
@@ -273,7 +277,8 @@ void SimpleParser::statement( stmts* inherited )
 					stmts* temp = new stmts();
 					new_label(temp);
 
-					std::cout << "iffalse " << result1->addr << " " << temp_ops << " " << result2->addr << " goto " << inherited->next << ":\n";
+					std::cout << "if " << result1->addr << " " << temp_ops << " " << result2->addr << " goto " << temp->next << "\n";
+					std::cout << "goto " << inherited->next << "\n";
 					block(temp);
 
 					std::cout << inherited->next << ":\n";
@@ -284,7 +289,8 @@ void SimpleParser::statement( stmts* inherited )
 				stmts* temp = new stmts();
 				new_label(temp);
 
-				std::cout << " iffalse " << result1->addr << " > " << "0  goto " << inherited->next << "\n";
+				std::cout << "if " << result1->addr << " > " << "0  goto " << temp->next << "\n";
+				std::cout << "goto " << inherited->next << "\n";
 				block(temp);
 
 				std::cout << inherited->next << ":\n";
@@ -301,45 +307,64 @@ void SimpleParser::statement( stmts* inherited )
 	} // end IF statement
 	else if (next_token->token_type == WHILE)
 	{
-		//handling while with current implementation is pretty hard. 
 		getNextToken();
 		if (next_token->token_type == O_PARAM)
 		{
 			expr* result1 = exprssion();
 
+			stmts* temp = new stmts();
+			new_label(temp, true);
+			new_label(temp);
+;
+
+			std::cout << temp->begin << ":\n";
+			std::cout << result1->code << "\n";
+
+			//temp->code += temp->begin + 
+			//temp->code += result1->code;
+
 			getNextToken();
 			if (is_relation_operator(next_token))
 			{
+				std::string temp_ops = next_token->value;
 				// store the token type, as below call to expr will change the tocken
 				int relation_op = next_token->token_type;
 
 				// right side of the relation expression.
 				expr* result2 = exprssion();
+				std::cout << result2->code;
+				//temp->code += result2->code;
 
 				getNextToken();
 
 				// end paranthasis of IF condition when both E1 and E2 are present
 				if (next_token->token_type == E_PARAM)
 				{
-					// compare the return values of the expression here
-					// if the comparison success then parse the statement block of the IF statement.
+					temp->code += "if " + result1->addr + " " + temp_ops + " " + result2->addr + " goto "+ temp->next +"\n";
+					temp->code += "goto " + inherited->next + " \n";
 					
+					std::cout << temp->code ;
+					
+					block(temp);
+					std::cout << "goto " << temp->begin << "\n";
+					std::cout << inherited->next << ":\n";
 				}
 			}
 			else if (next_token->token_type == E_PARAM) // end paranthasis of IF condition if only one E is present
 			{
-				// only one expression present in the if condition
-				// In this case if the expression return value is > 0 then if condition passes;
-				
+				//std::cout << " iffalse " << result1->addr << " > " << "0  goto " << inherited->next << "\n";
+				//block(temp);
+
+				//std::cout << inherited->next << ":\n";
 			}
 			else
 			{
-				std::cout << "Error : expected relation operator in the IF statement \n";
+				std::cout << "Error : expected relation operator in the WHILE statement \n";
 			}
 		}
 		else
 		{
-			std::cout << "Error : expected ( after keyword IF \n";
+			std::cout << "Error : expected ( after keyword WHILE \n";
 		}
 	} // end WHILE statement
 	else
@@ -361,13 +386,15 @@ void SimpleParser::statement( stmts* inherited )
 // evaluation of condition in the if statement is give as inherited attribute for this.
 void SimpleParser::block( stmts* inherited )
 {
-	std::cout << inherited->next << ":\n";
 	// check the begining of the if block by open { curly braces
+	
 	getNextToken();
 	if (next_token->token_type != O_BRACES)
 	{
 		std::cout << "Error : expect { at the begining of the IF block \n";
 	}
+
+	std::cout << inherited->next << ":\n";
 
 	statements(inherited);
 
