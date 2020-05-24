@@ -1,0 +1,15 @@
+START 
+
+auto x,y,z;
+
+x = 2 * 3;
+y = x ^ 2; 
+z = x * y + ( 50  +4 );
+
+out(y);
+out(x);
+out(z);  
+
+END
+
+
