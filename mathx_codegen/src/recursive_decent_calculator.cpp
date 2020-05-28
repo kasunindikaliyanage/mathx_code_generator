@@ -276,9 +276,9 @@ void SimpleParser::statement( stmts* inherited )
 		}
 
 		std::cout << cond_temp->code;
-		std::cout << cond_temp->true_lbl << ":\n";
+		//std::cout << cond_temp->true_lbl << ":\n";
 
-		block(inherited);
+		block(temp);
 
 	} // end IF statement
 	else if (next_token->token_type == WHILE)

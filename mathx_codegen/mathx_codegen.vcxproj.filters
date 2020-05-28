@@ -32,5 +32,8 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="tests\recursive_decent_calculator.txt" />
+    <Text Include="tests\if_with_relation_operation_check.txt" />
+    <Text Include="tests\plus_mul_code_gen.txt" />
+    <Text Include="tests\recursive_decent_calculator_declarion_list.txt" />
   </ItemGroup>
 </Project>
