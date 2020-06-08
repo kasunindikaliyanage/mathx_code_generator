@@ -1,66 +1,121 @@
 #pragma once
 
-// This is the most simple parser which calculate mathamatical expressions
-// But it is getting grow day by day.
-
-// TODO 1. Change the type of the variables to double and handle calculations as doubles for more precision.	- DONE
-// TODO 2. Add usfull functions add, sub, pow, root, log etc.													- 
-// TODO 3. Addition of multi-dimention arrays, printing of multi-dimension arrays.								-
-// TODO 4. Add while loops.																						- 
-// TODO 5. Addition of vec and mat types and matrix related calculations.										-
-// TODO 6. Make parser can evaluate and report all errors, with error recovery mechanism.						-
-// TODO 7. Parallel implementation of matrix calculations.														-
-// TODO 8. Add &&, || operations.
-// TODO 9. Division by zero exception.
-// TODO 10.Add types (short, int, float, double)
-// TODO 11.Add type string. 
-
 #include <stack>
 #include <map>
 #include "../headers/simple_lexer.h"
 
+enum NODE_TYPE
+{
+    NT_VOID,       // Not any intended types  
+    NT_ADD,        // num + num
+    NT_SUB,        // num - num
+    NT_MUL,        // *
+    NT_DIV,        // /
+    NT_EQ,         // ==
+    NT_NE,         // !=
+    NT_LT,         // <
+    NT_LE,         // <=
+    NT_ASSIGN,     // =
+    NT_LOGAND,     // &&
+    NT_LOGOR,      // ||
+    NT_RETURN,     // "return"
+    NT_IF,         // "if"
+    NT_WHILE,      // "while"
+    NT_FOR,        // "for"
+    NT_DO,         // "do"
+    NT_SWITCH,     // "switch"
+    NT_CASE,       // "case"
+    NT_BLOCK,      // { ... }
+    NT_BREAK,      // "break"
+    NT_CONTINUE,   // "continue"
+    NT_FUNCALL,    // Function call
+    NT_VAR,        // Variable
+    NT_NUM,        // Integer
+    NT_CONDITION,  // condition
+    NT_EXPR,       // Expr
+    NT_PRINT,      // print sys call  
+    NT_NULL,       // Empty statement
+};
+
+struct Node
+{
+    Node* lhs;
+    Node* rhs;
+    NODE_TYPE type;
+
+    Node* next;
+
+    Node* condition;
+    Node* then;
+
+    long value;
+    std::string variable_name;
+
+    bool is_leaf = false;
+
+    int temp_var_index = 0;
+
+    std::string str;
+
+    std::string to_string()
+    {
+        if (is_leaf)
+        {
+            if (type == NT_VAR)
+                return variable_name;
+            else if (type == NT_NUM)
+                return std::to_string(value);
+        }
+        else
+        {
+            str.append("t");
+            str.append(std::to_string(temp_var_index));
+            //str = "t"+temp_var_index;
+            return str;
+        }
+    }
+};
+
 struct stmts
 {
-	std::string next;
-	std::string code;
-	std::string begin;
+    std::string next;
+    std::string code;
+    std::string begin;
 };
 
 struct condition
 {
-	std::string true_lbl;
-	std::string false_lbl;
-	std::string code;
+    std::string true_lbl;
+    std::string false_lbl;
+    std::string code;
 };
 
-struct expr{
-	std::string addr;
-	std::string code;
-	double value;
+struct expr {
+    std::string addr;
+    std::string code;
+    double value;
 };
 
 class SimpleParser {
 	SimpleLexer* lexer;
 
-	expr* factor( expr* );
-	//expr power_( expr );
-	expr* term( expr* );
-	expr* term_( expr* );
-	expr* exprssion();
-	expr* exprssion_( expr* );
-	//expr power( expr );
+	Node* factor();
+	Node* term();
+	Node* term_();
+	Node* exprssion();
+	Node* exprssion_();
 
-	void relation(condition*);
+	Node* relation();
 
 	void program();
 	void decls();
 	void decl();
 	void ids();
 
-	void block( stmts* );
+	Node* block();
 
-	void statements( stmts* );
-	void statement( stmts* );
+	Node* statements(Node* current);
+	Node* statement();
 
 
 	void getNextToken();
@@ -76,10 +131,13 @@ class SimpleParser {
 
 	bool eol = false;
 
-public:
+	Node* head;
 
+public:
 	SimpleParser(SimpleLexer* _lexer) : lexer(_lexer)
 	{}
 
 	void parse();
+
+	Node* get_head();
 };

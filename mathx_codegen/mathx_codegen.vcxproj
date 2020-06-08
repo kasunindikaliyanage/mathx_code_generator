@@ -138,6 +138,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="headers\code_generator.h" />
     <ClInclude Include="headers\recursive_decent_calculator.h" />
     <ClInclude Include="headers\simple_lexer.h" />
   </ItemGroup>
